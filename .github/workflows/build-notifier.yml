@@ -3,15 +3,9 @@ name: Build Windows Notifier
 on:
   push:
     branches: [ main ]
-    paths:
-      - 'win10_notifier.cpp'
-      - '.github/workflows/build-notifier.yml'
   pull_request:
     branches: [ main ]
-    paths:
-      - 'win10_notifier.cpp'
-      - '.github/workflows/build-notifier.yml'
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
 
 jobs:
   build:
@@ -29,22 +23,30 @@ jobs:
       run: |
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
         cl.exe /EHsc /std:c++17 /O1 /Os /GL win10_notifier.cpp /link /SUBSYSTEM:WINDOWS user32.lib ole32.lib shell32.lib runtimeobject.lib /OPT:REF /OPT:ICF
+        dir
+    
+    - name: Check if executable exists
+      run: |
+        if (Test-Path -Path "win10_notifier.exe") {
+          echo "Executable exists"
+        } else {
+          echo "Executable does not exist"
+          exit 1
+        }
+      shell: pwsh
       
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+    - name: Upload Artifact (v2)
+      uses: actions/upload-artifact@v2
       with:
         name: win10-notifier
         path: win10_notifier.exe
         
     - name: Create Release
       id: create_release
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: softprops/action-gh-release@v1
       with:
         files: win10_notifier.exe
         name: Windows Notifier ${{ github.sha }}
         tag_name: notifier-${{ github.sha }}
-        draft: false
-        prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
