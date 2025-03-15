@@ -134,30 +134,33 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     int argc;
     LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
     
-    if (argc < 3) {
+    // Require exactly 4 arguments (program name + appId + title + message)
+    if (argc != 4) {
+        MessageBoxW(NULL, L"Usage: wintoast.exe <appId> <title> <message>", L"Error", MB_OK | MB_ICONERROR);
         LocalFree(argv);
         return 1;
     }
     
     // Convert wide strings to UTF-8
-    char title[1024] = {0};
-    char message[1024] = {0};
+    char appIdUtf8[1024] = {0};
+    char titleUtf8[1024] = {0};
+    char messageUtf8[1024] = {0};
     
-    WideCharToMultiByte(CP_UTF8, 0, argv[1], -1, title, sizeof(title), NULL, NULL);
-    WideCharToMultiByte(CP_UTF8, 0, argv[2], -1, message, sizeof(message), NULL, NULL);
+    WideCharToMultiByte(CP_UTF8, 0, argv[1], -1, appIdUtf8, sizeof(appIdUtf8), NULL, NULL);
+    WideCharToMultiByte(CP_UTF8, 0, argv[2], -1, titleUtf8, sizeof(titleUtf8), NULL, NULL);
+    WideCharToMultiByte(CP_UTF8, 0, argv[3], -1, messageUtf8, sizeof(messageUtf8), NULL, NULL);
     
     // Convert back to wide strings (ensures proper UTF-8 handling)
-    std::wstring wTitle = utf8_to_wide(title);
-    std::wstring wMessage = utf8_to_wide(message);
-    
-    // App ID from the main application - match this with your application
-    std::wstring appId = L"VB.VBBridge";
+    std::wstring wAppId = utf8_to_wide(appIdUtf8);
+    std::wstring wTitle = utf8_to_wide(titleUtf8);
+    std::wstring wMessage = utf8_to_wide(messageUtf8);
     
     // Show notification
-    bool success = ShowNotification(appId, wTitle, wMessage);
+    bool success = ShowNotification(wAppId, wTitle, wMessage);
     
     // Clean up
     LocalFree(argv);
+    
     return success ? 0 : 1;
 }
 
