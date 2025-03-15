@@ -29,4 +29,22 @@ jobs:
       run: |
         if (Test-Path -Path "wintoast.exe") {
           echo "Executable exists"
-          }
+        } else {
+          echo "Executable does not exist"
+          exit 1
+        }
+      shell: pwsh
+      
+    - name: Convert Executable to Base64
+      run: |
+        $bytes = [System.IO.File]::ReadAllBytes("$env:GITHUB_WORKSPACE\wintoast.exe")
+        $base64 = [System.Convert]::ToBase64String($bytes)
+        echo "EXECUTABLE_BASE64=$base64" >> $env:GITHUB_ENV
+      shell: pwsh
+    
+    - name: Output Base64 Executable
+      run: |
+        echo "::notice::Executable Base64 (copy everything between START and END markers)"
+        echo "::notice::START_EXECUTABLE_BASE64"
+        echo "${{ env.EXECUTABLE_BASE64 }}"
+        echo "::notice::END_EXECUTABLE_BASE64"
