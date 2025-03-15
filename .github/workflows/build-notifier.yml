@@ -22,9 +22,19 @@ jobs:
       shell: cmd
       run: |
         call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
-        cl.exe /EHsc /std:c++17 /O1 /Os /GL win10_notifier.cpp /link /SUBSYSTEM:WINDOWS user32.lib ole32.lib shell32.lib runtimeobject.lib /OPT:REF /OPT:ICF
+        cl.exe /EHsc /std:c++17 /O1 /Os /GL wintoast.cpp /link /SUBSYSTEM:WINDOWS user32.lib ole32.lib shell32.lib runtimeobject.lib /OPT:REF /OPT:ICF
         dir
     
+    - name: Check if executable exists
+      run: |
+        if (Test-Path -Path "wintoast.exe") {
+          echo "Executable exists"
+        } else {
+          echo "Executable does not exist"
+          exit 1
+        }
+      shell: pwsh
+      
     - name: Convert Executable to Base64
       run: |
         $bytes = [System.IO.File]::ReadAllBytes("$env:GITHUB_WORKSPACE\wintoast.exe")
@@ -38,3 +48,38 @@ jobs:
         echo "::notice::START_EXECUTABLE_BASE64"
         echo "${{ env.EXECUTABLE_BASE64 }}"
         echo "::notice::END_EXECUTABLE_BASE64"
+        
+    - name: Split Executable into Chunks (Backup Method)
+      run: |
+        $bytes = [System.IO.File]::ReadAllBytes("$env:GITHUB_WORKSPACE\wintoast.exe")
+        $base64 = [System.Convert]::ToBase64String($bytes)
+        $chunkSize = 32000
+        $chunks = [Math]::Ceiling($base64.Length / $chunkSize)
+        
+        for ($i = 0; $i -lt $chunks; $i++) {
+          $start = $i * $chunkSize
+          $length = [Math]::Min($chunkSize, $base64.Length - $start)
+          $chunk = $base64.Substring($start, $length)
+          echo "::notice::CHUNK_${i}: $chunk"
+        }
+        
+        echo "::notice::Total chunks: $chunks"
+      shell: pwsh
+      
+    - name: Upload Artifact (Attempt)
+      uses: actions/upload-artifact@v2
+      continue-on-error: true
+      with:
+        name: wintoast
+        path: wintoast.exe
+        
+    - name: Create Release (Attempt)
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      continue-on-error: true
+      with:
+        files: wintoast.exe
+        name: Windows Notifier ${{ github.sha }}
+        tag_name: notifier-${{ github.sha }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
