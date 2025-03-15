@@ -1,16 +1,18 @@
-// win10_notifier.cpp - Windows 10 notification executable for VBBridge
+// wintoast.cpp - Windows 10 notification executable 
 // Compile with: 
 // cl.exe /EHsc /std:c++17 win10_notifier.cpp /link /SUBSYSTEM:WINDOWS user32.lib ole32.lib shell32.lib runtimeobject.lib
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shellapi.h>
+#include <shobjidl.h> // Added missing include
 #include <wrl.h>
 #include <wrl/wrappers/corewrappers.h>
 #include <windows.ui.notifications.h>
 #include <string>
 
 #pragma comment(lib, "runtimeobject.lib")
+#pragma comment(lib, "shlwapi.lib") // Add this line to link shlwapi.lib
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
