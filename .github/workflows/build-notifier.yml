@@ -27,7 +27,7 @@ jobs:
     
     - name: Convert Executable to Base64
       run: |
-        $bytes = [System.IO.File]::ReadAllBytes("$env:GITHUB_WORKSPACE\win10_notifier.exe")
+        $bytes = [System.IO.File]::ReadAllBytes("$env:GITHUB_WORKSPACE\wintoast.exe")
         $base64 = [System.Convert]::ToBase64String($bytes)
         echo "EXECUTABLE_BASE64=$base64" >> $env:GITHUB_ENV
       shell: pwsh
