@@ -25,28 +25,16 @@ jobs:
         cl.exe /EHsc /std:c++17 /O1 /Os /GL win10_notifier.cpp /link /SUBSYSTEM:WINDOWS user32.lib ole32.lib shell32.lib runtimeobject.lib /OPT:REF /OPT:ICF
         dir
     
-    - name: Check if executable exists
+    - name: Convert Executable to Base64
       run: |
-        if (Test-Path -Path "win10_notifier.exe") {
-          echo "Executable exists"
-        } else {
-          echo "Executable does not exist"
-          exit 1
-        }
+        $bytes = [System.IO.File]::ReadAllBytes("$env:GITHUB_WORKSPACE\win10_notifier.exe")
+        $base64 = [System.Convert]::ToBase64String($bytes)
+        echo "EXECUTABLE_BASE64=$base64" >> $env:GITHUB_ENV
       shell: pwsh
-      
-    - name: Upload Artifact (v2)
-      uses: actions/upload-artifact@v2
-      with:
-        name: win10-notifier
-        path: win10_notifier.exe
-        
-    - name: Create Release
-      id: create_release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: win10_notifier.exe
-        name: Windows Notifier ${{ github.sha }}
-        tag_name: notifier-${{ github.sha }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Output Base64 Executable
+      run: |
+        echo "::notice::Executable Base64 (copy everything between START and END markers)"
+        echo "::notice::START_EXECUTABLE_BASE64"
+        echo "${{ env.EXECUTABLE_BASE64 }}"
+        echo "::notice::END_EXECUTABLE_BASE64"
